@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  if username
+    h3 Użytkownik #{username}
+    if friends
+      h4 Znajomi
+      ol
+        each friend in friends
+          li
+            .username= friend.username
+            .link
+              a(href='/follow/'+friend.userId) Obserwuj
+    else
+      p Nie udało się połączyć z serwerem relacji...
+    if posts
+      h4 Posty
+      div
+        each post in posts
+          .post= post
+    else
+      p Nie udało się połączyć z serwerem postów...
+  else
+    h1 Nie znaleziono użytkownika

@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= title
+  if username == null
+    p Witaj w #{title}
+    div
+      a(href='/login') Zaloguj się
+    div
+      a(href='/register') Zarejestruj się
+  else
+    p Witaj w #{title}, #{username}!
+    div
+      a(href='/logout') Wyloguj się
