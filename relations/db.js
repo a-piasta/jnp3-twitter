@@ -38,13 +38,14 @@ class DatabaseWrapper {
     }
 
     getFriendsById(userId) {
-        const stmt = 'SELECT * FROM follows WHERE userid=?';
-        this._promisifiedAll(userId % 2, stmt, [userId]);
+        const stmt = 'SELECT followed_id FROM follows WHERE id=?';
+        return this._promisifiedAll(userId % 2, stmt, [userId]);
     }
     
     follow(user, followedUser) {
+        followedUser = +followedUser;
         const stmt = `INSERT INTO follows (id, followed_id)
-            SELECT (?, ?) WHERE NOT EXISTS (SELECT * FROM follows WHERE id=? AND followed_id=?)`;
+            SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM follows WHERE id=? AND followed_id=?)`;
         return this._promisifiedRun(user % 2, stmt, [user, followedUser, user, followedUser]);
     }
 }

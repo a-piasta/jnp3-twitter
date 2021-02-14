@@ -1,8 +1,8 @@
 extends layout
 
 block content
-  if username
-    h3 Użytkownik #{username}
+  if user
+    h3 Użytkownik #{user.username}
     if friends
       h4 Znajomi
       ol
@@ -10,7 +10,9 @@ block content
           li
             .username= friend.username
             .link
-              a(href='/follow/'+friend.userId) Obserwuj
+              form(action='/follow/'+friend.userId, method='post')
+                input(type='hidden', value=csrfToken)
+                input(type='submit', value='Obserwuj')
     else
       p Nie udało się połączyć z serwerem relacji...
     if posts
