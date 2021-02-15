@@ -13,6 +13,9 @@ block content
               form(action='/follow/'+friend.userId, method='post')
                 input(type='hidden', value=csrfToken)
                 input(type='submit', value='Obserwuj')
+              form(action='/unfollow/'+friend.userId, method='post')
+                input(type='hidden', value=csrfToken)
+                input(type='submit', value='Przestań obserwować')
     else
       p Nie udało się połączyć z serwerem relacji...
     if posts

@@ -48,6 +48,12 @@ class DatabaseWrapper {
             SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM follows WHERE id=? AND followed_id=?)`;
         return this._promisifiedRun(user % 2, stmt, [user, followedUser, user, followedUser]);
     }
+    
+    unfollow(user, followedUser) {
+        followedUser = +followedUser;
+        const stmt = 'DELETE FROM follows WHERE id=? AND followed_id=?';
+        return this._promisifiedRun(user % 2, stmt, [user, followedUser]);
+    }
 }
 
 module.exports = DatabaseWrapper;

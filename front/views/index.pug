@@ -12,6 +12,8 @@ block content
     p Witaj w #{title}, #{username}!
     .logout
       a(href='/logout') Wyloguj się
+    .my_posts
+      a(href='/users/'+myid) Zobacz swoje posty
     if friends
       .friends
         h3 Zobacz nowe posty swoich znajomych
@@ -23,10 +25,16 @@ block content
       h3 Dodaj nowych znajomych
       ol
         each user in users
-          li= user.username
-            form(action='/follow/'+user.id, method='post')
-              input(type='hidden', name='_csrf', value=csrfToken)
-              input(type='submit', value='Obserwuj')
+          if user.username != username
+            li= user.username
+              if user.followed
+                form(action='/unfollow/'+user.id, method='post')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='submit', value='Obserwuj')
+              else
+                form(action='/follow/'+user.id, method='post')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='submit', value='Obserwuj')
     .post
       h3 Utwórz nowy post
       form(action='/create_post', method='post')

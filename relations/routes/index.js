@@ -27,4 +27,17 @@ router.post('/follow', async function(req, res) {
   res.send('OK');
 });
 
+router.post('/unfollow', async function(req, res) {
+  try {
+    const data = req.body;
+    console.log(req.body);
+    await db.unfollow(data.user, data.followedUser);
+  } catch (err) {
+    console.log(err);
+    res.statusCode = 500;
+    return res.send('error');
+  }
+  res.send('OK');
+});
+
 module.exports = router;

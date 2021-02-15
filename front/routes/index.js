@@ -47,8 +47,15 @@ router.get('/', csrfProtection, async function(req, res, next) {
       console.log(err);
     }
   }
+  if (users !== undefined) {
+    friendIds = friends.map(friend => friend.followed_id);
+    for (var index in users) {
+      users[index].followed = friendIds.includes(users[index].id);
+    }
+  }
   res.render('index', {
     title: 'Albicla',
+    myid: req.session.userid,
     username: req.session.username,
     friends: friends,
     users: users,
@@ -206,6 +213,7 @@ router.get('/users/:userId', requireAuth, csrfProtection, async function(req, re
     user: user,
     posts: posts,
     friends: friends,
+    is_me: req.session.userid == req.params.userId,
     csrfToken: req.csrfToken()
   });
 });
@@ -219,6 +227,27 @@ router.post('/follow/:userId', requireAuth, csrfProtection, async function(req, 
     console.log('follow '+ req.session.userid+':'+req.params.userId);
     response = await axios.request({
       url: relationsAddress + '/follow',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      },
+      data: data
+    });
+    return res.redirect('/users/' + req.params.userId);
+  } catch (err) {
+    next(createError(500, err));
+  }
+});
+
+router.post('/unfollow/:userId', requireAuth, csrfProtection, async function(req, res, next) {
+  let data = JSON.stringify({
+    user: req.session.userid,
+    followedUser: req.params.userId
+  });
+  try {
+    response = await axios.request({
+      url: relationsAddress + '/unfollow',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
