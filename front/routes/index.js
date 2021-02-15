@@ -9,9 +9,9 @@ const csrfProtection = csrf({cookie: true});
 
 const createError = require('http-errors');
 
-const relationsAddress = 'http://localhost:5000';
-const usersAddress = 'http://localhost:8000';
-const postsAddress = 'http://localhost:4000';
+const relationsAddress = 'http://jnp3-relations:5000';
+const usersAddress = 'http://varnish-users:8000';
+const postsAddress = 'http://jnp3-posts:4000';
 
 function requireAuth(req, res, next) {
   if (!req.session.userid) return res.redirect('/');
@@ -81,8 +81,9 @@ router.post('/login', csrfProtection, async function(req, res, next) {
     login: req.body.login,
     password: req.body.pass
   });
-  
+  console.log(data);
   try {
+    console.log(usersAddress + '/login');
     const response = await axios.request({
       url: usersAddress + '/login',
       method: 'post',

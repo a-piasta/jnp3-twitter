@@ -3,7 +3,11 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const redis = require('redis');
 const session = require('express-session');
+
+var RedisStore = require('connect-redis')(session);
+var redisClient = redis.createClient(process.env.REDIS_URL);
 
 var indexRouter = require('./routes/index');
 
@@ -23,6 +27,7 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 15 * 60 * 1000},
+  store: new RedisStore({ client: redisClient }),
 }));
 
 app.use('/', indexRouter);

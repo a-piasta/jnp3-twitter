@@ -1,10 +1,10 @@
 FROM node:14
-WORKDIR /usr/src/front
+WORKDIR /usr/src/users
 
 COPY package*.json ./
 
 RUN npm install
 COPY . .
 
-EXPOSE 80
-CMD [ "npm", "start" ]
+EXPOSE 8000
+CMD [ "node", "bin/www" ]
