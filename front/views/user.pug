@@ -19,7 +19,9 @@ block content
       h4 Posty
       div
         each post in posts
-          .post= post
+          .post
+            h5= post.title
+            .message=post.message
     else
       p Nie udało się połączyć z serwerem postów...
   else

@@ -225,10 +225,30 @@ router.post('/follow/:userId', requireAuth, csrfProtection, async function(req, 
       },
       data: data
     });
-    console.log('Dupa');
     return res.redirect('/users/' + req.params.userId);
   } catch (err) {
-    console.log('error');
+    next(createError(500, err));
+  }
+});
+
+router.post('/create_post', requireAuth, csrfProtection, async function(req, res, next) {
+  let data = JSON.stringify({
+    user: req.session.userid,
+    title: req.body.title,
+    message: req.body.message
+  });
+  try {
+    response = await axios.request({
+      url: postsAddress + '/create_post',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      },
+      data: data
+    });
+    return res.redirect('/');
+  } catch (err) {
     next(createError(500, err));
   }
 });
