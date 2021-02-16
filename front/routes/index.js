@@ -6,6 +6,7 @@ const redis = require('redis');
 var redisClient = redis.createClient(process.env.REDIS_URL);
 const redisGet = promisify(redisClient.get).bind(redisClient);
 const redisSetex = promisify(redisClient.setex).bind(redisClient);
+const redisDel = promisify(redisClient.del).bind(redisClient);
 
 const http = require('http');
 const axios = require('axios');
@@ -266,6 +267,7 @@ router.post('/follow/:userId', requireAuth, csrfProtection, async function(req, 
       },
       data: data
     });
+    await redisDel(`friends-${req.session.userid}`);
     return res.redirect('/users/' + req.params.userId);
   } catch (err) {
     next(createError(500, err));
@@ -278,7 +280,6 @@ router.post('/unfollow/:userId', csrfProtection, requireAuth, async function(req
     followedUser: req.params.userId
   });
   try {
-    console.log('wchodzi w unfollow');
     response = await axios.request({
       url: relationsAddress + '/unfollow',
       method: 'POST',
@@ -288,6 +289,7 @@ router.post('/unfollow/:userId', csrfProtection, requireAuth, async function(req
       },
       data: data
     });
+    await redisDel(`friends-${req.session.userid}`);
     return res.redirect('/users/' + req.params.userId);
   } catch (err) {
     next(createError(500, err));

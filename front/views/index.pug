@@ -21,6 +21,9 @@ block content
           each friend in friends
             li
               a(href='/users/'+friend.followed_id)=friend.username
+              form(action='/unfollow/'+friend.followed_id, method='post')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='submit', value='Przestań obserwować')
     .users
       h3 Dodaj nowych znajomych
       ol
