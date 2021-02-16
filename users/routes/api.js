@@ -1,7 +1,14 @@
 var express = require('express');
 var router = express.Router();
+const { promisify } = require("util");
+const redis = require('redis');
+const { cached } = require('sqlite3');
+var redisClient = redis.createClient(process.env.REDIS_URL);
+
 const DatabaseWrapper = require('../db');
 const db = new DatabaseWrapper();
+
+const redisGet = promisify(redisClient.get).bind(redisClient);
 
 router.post('/register', async function(req, res, next) {
   data = req.body;
@@ -66,13 +73,19 @@ router.get('/users/:userid', async function(req, res) {
   }
 });
 
-router.get('/all', async function(req, res) {
+router.get('/all/:userid', async function(req, res) {
   try {
-    let users = await db.getAllUsers();
-    console.log(users);
+    requestingUid = req.params.userid;
+    cachedFriends = await redisGet(`friends-${requestingUid}`);
+    if (!cachedFriends) {
+      cachedFriends = [];
+    }
+    cachedFriends = JSON.parse(cachedFriends).map(el => el.followed_id);
+    let users = await db.getAllUsers(cachedFriends);
     res.json(users);
   } catch (err) {
     res.statusCode = 500;
+    console.log(err);
     res.send('db error');
   }
 });

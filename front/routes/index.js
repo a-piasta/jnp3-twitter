@@ -1,11 +1,17 @@
 var express = require('express');
 var router = express.Router();
+const { promisify } = require("util");
+
+const redis = require('redis');
+var redisClient = redis.createClient(process.env.REDIS_URL);
+const redisGet = promisify(redisClient.get).bind(redisClient);
+const redisSetex = promisify(redisClient.setex).bind(redisClient);
 
 const http = require('http');
 const axios = require('axios');
 
-const csrf = require('csurf');
-const csrfProtection = csrf({cookie: true});
+var csrf = require('csurf');
+var csrfProtection = csrf({cookie: false});
 
 const createError = require('http-errors');
 
@@ -24,24 +30,35 @@ router.get('/', csrfProtection, async function(req, res, next) {
   users = undefined;
   if (req.session.username) {
     try {
-      const response = await axios.get(usersAddress + '/all');
-      if (response.status == 200) {
-        users = response.data;
-        console.log(response.data);
+      cached = await redisGet(`friends-${req.session.userid}`);
+      if (cached) {
+        friends = JSON.parse(cached);
+      } else {
+        const response = await axios.get(relationsAddress + '/friends/' + req.session.userid);
+        if (response.status == 200) {
+          friends = response.data;
+          await redisSetex(`friends-${req.session.userid}`, 60, JSON.stringify(response.data));
+        }
+      }
+      for (i=0; i<friends.length; i++) {
+        cached = await redisGet(`username-${friends[i].followed_id}`)
+        if (cached) {
+          friends[i].username = cached;
+        } else {
+          let resp = await axios.get(usersAddress + '/users/' + friends[i].followed_id);
+          if (resp.status==200) {
+            friends[i].username = resp.data.username;
+            await redisSetex(`username-${friends[i].followed_id}`, 600, resp.data.username)
+          }
+        }
       }
     } catch (err) {
       console.log(err);
     }
     try {
-      const response = await axios.get(relationsAddress + '/friends/' + req.session.userid);
+      const response = await axios.get(usersAddress + '/all/' + req.session.userid);
       if (response.status == 200) {
-        friends = response.data;
-        for (i=0; i<friends.length; i++) {
-          let resp = await axios.get(usersAddress + '/users/' + friends[i].followed_id);
-          if (resp.status==200) {
-            friends[i].username = resp.data.username;
-          }
-        }
+        users = response.data;
       }
     } catch (err) {
       console.log(err);
@@ -173,7 +190,7 @@ router.get('/logout', csrfProtection, function(req, res, next) {
   res.redirect('/');
 });
 
-router.get('/users/:userId', requireAuth, csrfProtection, async function(req, res, next) {
+router.get('/users/:userId', csrfProtection, requireAuth, async function(req, res, next) {
   try {
     response = await axios.get(usersAddress + '/users/' + req.params.userId);
     if (response.status == 200) {
@@ -208,11 +225,27 @@ router.get('/users/:userId', requireAuth, csrfProtection, async function(req, re
   } catch (err) {
     console.log(err);
   }
-
+  try {
+    cached = await redisGet(`friends-${req.session.userid}`);
+    if (cached) {
+      currFriends = JSON.parse(cached);
+    } else {
+      const response = await axios.get(relationsAddress + '/friends/' + req.session.userid);
+      if (response.status == 200) {
+        currFriends = response.data;
+        await redisSetex(`friends-${req.session.userid}`, 60, JSON.stringify(response.data));
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+  currFriends = new Set(currFriends.map(el => el.followed_id));
+  friends.forEach(el => el.followed = currFriends.has(el.followed_id))
   return res.render('user', {
     user: user,
     posts: posts,
     friends: friends,
+    curr_uid: req.session.userid,
     is_me: req.session.userid == req.params.userId,
     csrfToken: req.csrfToken()
   });
@@ -224,7 +257,6 @@ router.post('/follow/:userId', requireAuth, csrfProtection, async function(req, 
     followedUser: req.params.userId
   });
   try {
-    console.log('follow '+ req.session.userid+':'+req.params.userId);
     response = await axios.request({
       url: relationsAddress + '/follow',
       method: 'POST',
@@ -240,12 +272,13 @@ router.post('/follow/:userId', requireAuth, csrfProtection, async function(req, 
   }
 });
 
-router.post('/unfollow/:userId', requireAuth, csrfProtection, async function(req, res, next) {
+router.post('/unfollow/:userId', csrfProtection, requireAuth, async function(req, res, next) {
   let data = JSON.stringify({
     user: req.session.userid,
     followedUser: req.params.userId
   });
   try {
+    console.log('wchodzi w unfollow');
     response = await axios.request({
       url: relationsAddress + '/unfollow',
       method: 'POST',

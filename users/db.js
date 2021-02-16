@@ -47,9 +47,9 @@ class DatabaseWrapper {
         return this._promisifiedRun(stmt, [username, password]);
     }
     
-    getAllUsers() {
-        const stmt = 'SELECT id, username from users';
-        return this._promisifiedAll(stmt);
+    getAllUsers(friends) {
+        const stmt = `SELECT id, username from users WHERE id NOT IN (${new Array(friends.length).fill('?')})`;
+        return this._promisifiedAll(stmt, friends);
     }
 }
 

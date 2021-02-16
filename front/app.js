@@ -6,6 +6,7 @@ var logger = require('morgan');
 const redis = require('redis');
 const session = require('express-session');
 
+
 var RedisStore = require('connect-redis')(session);
 var redisClient = redis.createClient(process.env.REDIS_URL);
 
@@ -20,10 +21,10 @@ app.set('view engine', 'pug');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('secret'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-  secret: 'kocham anime',
+  secret: 'secret',
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 15 * 60 * 1000},

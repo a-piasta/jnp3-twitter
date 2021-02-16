@@ -2,6 +2,7 @@ extends layout
 
 block content
   if user
+    input(type='hidden', name='_csrf', value=csrfToken)
     h3 Użytkownik #{user.username}
     if friends
       h4 Znajomi
@@ -10,12 +11,14 @@ block content
           li
             .username= friend.username
             .link
-              form(action='/follow/'+friend.userId, method='post')
-                input(type='hidden', value=csrfToken)
-                input(type='submit', value='Obserwuj')
-              form(action='/unfollow/'+friend.userId, method='post')
-                input(type='hidden', value=csrfToken)
-                input(type='submit', value='Przestań obserwować')
+              if !friend.followed && curr_uid !== friend.followed_id
+                form(action='/follow/'+friend.followed_id, method='post')
+                  input(type='hidden', value=csrfToken)
+                  input(type='submit', value='Obserwuj')
+              else if curr_uid !== friend.followed_id
+                form(action='/unfollow/'+friend.followed_id, method='post')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='submit', value='Przestań obserwować')
     else
       p Nie udało się połączyć z serwerem relacji...
     if posts

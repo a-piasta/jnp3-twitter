@@ -1,9 +1,5 @@
 version: "3.8"
 
-# networks:
-#   jnp3:
-#     driver: bridge
-
 services:
   redis:
     image: redis
@@ -29,57 +25,41 @@ services:
       - jnp3-users1
       - jnp3-users2
   jnp3-front1:
-    # image: jnp3-front1
-    # networks:
-    #   - jnp3
     environment:
       - REDIS_URL=redis://redis
     build: ./front
     container_name: jnp3-front1
-    # ports:
-    #   - 3000:3000
     volumes:
       - ./front:/usr/src/front
     depends_on:
       - redis
   jnp3-front2:
-    # image: jnp3-front
-    # networks:
-    #   - jnp3
     environment:
       - REDIS_URL=redis://redis
     build: ./front
     container_name: jnp3-front2
-    # ports:
-    #   - 3000:3000
     volumes:
       - ./front:/usr/src/front
     depends_on:
       - redis
   jnp3-users1:
     image: jnp3-users1
-    # networks:
-    #   - jnp3
+    environment:
+      - REDIS_URL=redis://redis
     build: ./users
     container_name: jnp3-users1
-    # ports:
-    #   - 8000:8000
     volumes:
       - ./users:/usr/src/users
   jnp3-users2:
     image: jnp3-users2
-    # networks:
-    #   - jnp3
+    environment:
+      - REDIS_URL=redis://redis
     build: ./users
     container_name: jnp3-users2
-    # ports:
-    #   - 8000:8000
     volumes:
       - ./users:/usr/src/users
   jnp3-posts:
     image: jnp3-posts
-    # networks:
-    #   - jnp3
     build: ./posts
     container_name: jnp3-posts
     ports:
@@ -88,8 +68,6 @@ services:
       - ./posts:/usr/src/posts
   jnp3-relations:
     image: jnp3-relations
-    # networks:
-    #   - jnp3
     build: ./relations
     container_name: jnp3-relations
     ports:
